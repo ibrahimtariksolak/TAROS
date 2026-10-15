@@ -1,0 +1,7 @@
+float64 visibility
+float64 rain_rate
+float64 fog_density
+geometry_msgs/Vector3 wind
+bool is_night
+---
+bool success

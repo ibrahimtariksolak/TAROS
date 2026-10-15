@@ -1,0 +1,107 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="hexarotor">
+    <pose>0 0 0.12 0 0 0</pose>
+
+    <link name="base_link">
+      <!-- Bkz. quadrotor: kinematik olarak surulen hedef. -->
+      <gravity>false</gravity>
+      <kinematic>true</kinematic>
+      <inertial>
+        <mass>5.0</mass>
+        <inertia>
+          <ixx>0.085</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.085</iyy><iyz>0</iyz>
+          <izz>0.16</izz>
+        </inertia>
+      </inertial>
+
+      <!-- Govde -->
+      <collision name="body_col">
+        <geometry><cylinder><radius>0.2</radius><length>0.1</length></cylinder></geometry>
+      </collision>
+      <visual name="body_vis">
+        <geometry><cylinder><radius>0.2</radius><length>0.08</length></cylinder></geometry>
+        <material>
+          <ambient>0.25 0.2 0.15 1</ambient>
+          <diffuse>0.35 0.3 0.25 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- 6 kol ve motor (60 derece aralikla) -->
+      <visual name="arm_0">
+        <pose>0.28 0 0 0 0 0</pose>
+        <geometry><box><size>0.35 0.025 0.025</size></box></geometry>
+        <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="motor_0">
+        <pose>0.38 0 0.04 0 0 0</pose>
+        <geometry><cylinder><radius>0.1</radius><length>0.02</length></cylinder></geometry>
+        <material><ambient>0.6 0.1 0.1 1</ambient><diffuse>0.7 0.15 0.15 1</diffuse></material>
+      </visual>
+
+      <visual name="arm_1">
+        <pose>0.14 0.242 0 0 0 1.047</pose>
+        <geometry><box><size>0.35 0.025 0.025</size></box></geometry>
+        <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="motor_1">
+        <pose>0.19 0.329 0.04 0 0 0</pose>
+        <geometry><cylinder><radius>0.1</radius><length>0.02</length></cylinder></geometry>
+        <material><ambient>0.1 0.6 0.1 1</ambient><diffuse>0.15 0.7 0.15 1</diffuse></material>
+      </visual>
+
+      <visual name="arm_2">
+        <pose>-0.14 0.242 0 0 0 2.094</pose>
+        <geometry><box><size>0.35 0.025 0.025</size></box></geometry>
+        <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="motor_2">
+        <pose>-0.19 0.329 0.04 0 0 0</pose>
+        <geometry><cylinder><radius>0.1</radius><length>0.02</length></cylinder></geometry>
+        <material><ambient>0.6 0.1 0.1 1</ambient><diffuse>0.7 0.15 0.15 1</diffuse></material>
+      </visual>
+
+      <visual name="arm_3">
+        <pose>-0.28 0 0 0 0 3.1416</pose>
+        <geometry><box><size>0.35 0.025 0.025</size></box></geometry>
+        <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="motor_3">
+        <pose>-0.38 0 0.04 0 0 0</pose>
+        <geometry><cylinder><radius>0.1</radius><length>0.02</length></cylinder></geometry>
+        <material><ambient>0.1 0.6 0.1 1</ambient><diffuse>0.15 0.7 0.15 1</diffuse></material>
+      </visual>
+
+      <visual name="arm_4">
+        <pose>-0.14 -0.242 0 0 0 -2.094</pose>
+        <geometry><box><size>0.35 0.025 0.025</size></box></geometry>
+        <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="motor_4">
+        <pose>-0.19 -0.329 0.04 0 0 0</pose>
+        <geometry><cylinder><radius>0.1</radius><length>0.02</length></cylinder></geometry>
+        <material><ambient>0.6 0.1 0.1 1</ambient><diffuse>0.7 0.15 0.15 1</diffuse></material>
+      </visual>
+
+      <visual name="arm_5">
+        <pose>0.14 -0.242 0 0 0 -1.047</pose>
+        <geometry><box><size>0.35 0.025 0.025</size></box></geometry>
+        <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="motor_5">
+        <pose>0.19 -0.329 0.04 0 0 0</pose>
+        <geometry><cylinder><radius>0.1</radius><length>0.02</length></cylinder></geometry>
+        <material><ambient>0.1 0.6 0.1 1</ambient><diffuse>0.15 0.7 0.15 1</diffuse></material>
+      </visual>
+
+      <!-- Payload (alt) -->
+      <visual name="payload">
+        <pose>0 0 -0.08 0 0 0</pose>
+        <geometry><box><size>0.15 0.15 0.08</size></box></geometry>
+        <material><ambient>0.15 0.15 0.15 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+      </visual>
+    </link>
+
+  </model>
+</sdf>

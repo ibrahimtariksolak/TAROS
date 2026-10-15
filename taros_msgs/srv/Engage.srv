@@ -1,0 +1,6 @@
+uint32 track_id
+uint8 effector_type    # 0=RF_JAMMER 1=GPS_SPOOFER 2=KINETIC_INTERCEPTOR
+---
+bool success
+string message
+uint32 engagement_id

@@ -1,0 +1,9 @@
+string drone_type          # quadrotor / fixedwing / hexarotor
+geometry_msgs/Point spawn_position
+geometry_msgs/Point[] waypoints
+float64 speed              # [m/s]
+string behavior            # TRANSIT / LOITER / ATTACK / RECON
+---
+bool success
+string drone_id
+string message

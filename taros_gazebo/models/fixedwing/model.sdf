@@ -1,0 +1,70 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="fixedwing">
+    <pose>0 0 0.15 0 0 0</pose>
+
+    <link name="base_link">
+      <!-- Bkz. quadrotor: kinematik olarak surulen hedef. -->
+      <gravity>false</gravity>
+      <kinematic>true</kinematic>
+      <inertial>
+        <mass>3.0</mass>
+        <inertia>
+          <ixx>0.12</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.05</iyy><iyz>0</iyz>
+          <izz>0.16</izz>
+        </inertia>
+      </inertial>
+
+      <!-- Govde (fuselage) -->
+      <collision name="body_col">
+        <geometry><box><size>1.2 0.15 0.12</size></box></geometry>
+      </collision>
+      <visual name="fuselage">
+        <geometry><box><size>1.2 0.15 0.12</size></box></geometry>
+        <material>
+          <ambient>0.3 0.35 0.3 1</ambient>
+          <diffuse>0.4 0.45 0.4 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Ana kanat -->
+      <visual name="wing">
+        <pose>0 0 0.02 0 0 0</pose>
+        <geometry><box><size>0.25 1.8 0.02</size></box></geometry>
+        <material>
+          <ambient>0.3 0.35 0.3 1</ambient>
+          <diffuse>0.4 0.45 0.4 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Kuyruk dikey -->
+      <visual name="vtail">
+        <pose>-0.55 0 0.12 0 0 0</pose>
+        <geometry><box><size>0.15 0.02 0.2</size></box></geometry>
+        <material>
+          <ambient>0.3 0.35 0.3 1</ambient>
+          <diffuse>0.4 0.45 0.4 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Kuyruk yatay -->
+      <visual name="htail">
+        <pose>-0.55 0 0.2 0 0 0</pose>
+        <geometry><box><size>0.1 0.5 0.015</size></box></geometry>
+        <material>
+          <ambient>0.3 0.35 0.3 1</ambient>
+          <diffuse>0.4 0.45 0.4 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Motor (burun) -->
+      <visual name="motor">
+        <pose>0.65 0 0 0 0 0</pose>
+        <geometry><cylinder><radius>0.03</radius><length>0.08</length></cylinder></geometry>
+        <material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.25 0.25 0.25 1</diffuse></material>
+      </visual>
+    </link>
+
+  </model>
+</sdf>

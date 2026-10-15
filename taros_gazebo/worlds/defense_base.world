@@ -1,0 +1,241 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="defense_base">
+
+    <!-- Model durumu kopru plugin'i.
+         WorldPlugin oldugu icin burada tanimlanmak zorunda; gzserver'a
+         -s ile verilirse SystemPlugin olarak aranir ve sessizce yuklenmez.
+         /gazebo/model_states ve /gazebo/set_entity_state arayuzlerini acar,
+         drone_pilot_node bunlara bagli. -->
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <ros>
+        <namespace>/gazebo</namespace>
+      </ros>
+      <update_rate>50.0</update_rate>
+    </plugin>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <physics type="ode">
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+    </physics>
+
+    <scene>
+      <ambient>0.6 0.6 0.6 1</ambient>
+      <background>0.4 0.6 0.8 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <!-- ========== SAVUNMA TESİSİ ========== -->
+
+    <!-- Ana komuta binasi -->
+    <model name="command_building">
+      <static>true</static>
+      <pose>0 0 2.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col">
+          <geometry><box><size>12 8 5</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>12 8 5</size></box></geometry>
+          <material>
+            <ambient>0.5 0.5 0.45 1</ambient>
+            <diffuse>0.6 0.6 0.55 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Radar kulesi -->
+    <model name="radar_tower">
+      <static>true</static>
+      <pose>20 0 0 0 0 0</pose>
+      <link name="base">
+        <collision name="col">
+          <geometry><cylinder><radius>1.5</radius><length>15</length></cylinder></geometry>
+          <pose>0 0 7.5 0 0 0</pose>
+        </collision>
+        <visual name="vis">
+          <geometry><cylinder><radius>1.5</radius><length>15</length></cylinder></geometry>
+          <pose>0 0 7.5 0 0 0</pose>
+          <material>
+            <ambient>0.4 0.4 0.4 1</ambient>
+            <diffuse>0.5 0.5 0.5 1</diffuse>
+          </material>
+        </visual>
+        <visual name="dish">
+          <geometry><box><size>4 0.3 2</size></box></geometry>
+          <pose>0 0 16 0 0 0</pose>
+          <material>
+            <ambient>0.7 0.7 0.7 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Depo binasi 1 -->
+    <model name="depot_1">
+      <static>true</static>
+      <pose>-15 20 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col">
+          <geometry><box><size>10 6 3</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>10 6 3</size></box></geometry>
+          <material>
+            <ambient>0.55 0.45 0.35 1</ambient>
+            <diffuse>0.65 0.55 0.45 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Depo binasi 2 -->
+    <model name="depot_2">
+      <static>true</static>
+      <pose>-15 -20 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col">
+          <geometry><box><size>10 6 3</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>10 6 3</size></box></geometry>
+          <material>
+            <ambient>0.55 0.45 0.35 1</ambient>
+            <diffuse>0.65 0.55 0.45 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Gozetleme kulesi 1 -->
+    <model name="watch_tower_1">
+      <static>true</static>
+      <pose>40 40 0 0 0 0</pose>
+      <link name="link">
+        <collision name="col">
+          <geometry><cylinder><radius>0.8</radius><length>10</length></cylinder></geometry>
+          <pose>0 0 5 0 0 0</pose>
+        </collision>
+        <visual name="tower">
+          <geometry><cylinder><radius>0.8</radius><length>10</length></cylinder></geometry>
+          <pose>0 0 5 0 0 0</pose>
+          <material>
+            <ambient>0.35 0.35 0.3 1</ambient>
+            <diffuse>0.45 0.45 0.4 1</diffuse>
+          </material>
+        </visual>
+        <visual name="cabin">
+          <geometry><box><size>3 3 2.5</size></box></geometry>
+          <pose>0 0 11.25 0 0 0</pose>
+          <material>
+            <ambient>0.3 0.4 0.3 1</ambient>
+            <diffuse>0.4 0.5 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Gozetleme kulesi 2 -->
+    <model name="watch_tower_2">
+      <static>true</static>
+      <pose>40 -40 0 0 0 0</pose>
+      <link name="link">
+        <collision name="col">
+          <geometry><cylinder><radius>0.8</radius><length>10</length></cylinder></geometry>
+          <pose>0 0 5 0 0 0</pose>
+        </collision>
+        <visual name="tower">
+          <geometry><cylinder><radius>0.8</radius><length>10</length></cylinder></geometry>
+          <pose>0 0 5 0 0 0</pose>
+          <material>
+            <ambient>0.35 0.35 0.3 1</ambient>
+            <diffuse>0.45 0.45 0.4 1</diffuse>
+          </material>
+        </visual>
+        <visual name="cabin">
+          <geometry><box><size>3 3 2.5</size></box></geometry>
+          <pose>0 0 11.25 0 0 0</pose>
+          <material>
+            <ambient>0.3 0.4 0.3 1</ambient>
+            <diffuse>0.4 0.5 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Cevre duvari - kuzey -->
+    <model name="wall_north">
+      <static>true</static>
+      <pose>0 50 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>120 0.3 3</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>120 0.3 3</size></box></geometry>
+          <material><ambient>0.5 0.5 0.45 1</ambient><diffuse>0.6 0.6 0.55 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <!-- Cevre duvari - guney -->
+    <model name="wall_south">
+      <static>true</static>
+      <pose>0 -50 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>120 0.3 3</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>120 0.3 3</size></box></geometry>
+          <material><ambient>0.5 0.5 0.45 1</ambient><diffuse>0.6 0.6 0.55 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <!-- Cevre duvari - dogu -->
+    <model name="wall_east">
+      <static>true</static>
+      <pose>60 0 1.5 0 0 1.5708</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>100 0.3 3</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>100 0.3 3</size></box></geometry>
+          <material><ambient>0.5 0.5 0.45 1</ambient><diffuse>0.6 0.6 0.55 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <!-- Cevre duvari - bati -->
+    <model name="wall_west">
+      <static>true</static>
+      <pose>-60 0 1.5 0 0 1.5708</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>100 0.3 3</size></box></geometry></collision>
+        <visual name="vis">
+          <geometry><box><size>100 0.3 3</size></box></geometry>
+          <material><ambient>0.5 0.5 0.45 1</ambient><diffuse>0.6 0.6 0.55 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- TAROS savunma birimi spawn noktasi -->
+    <model name="taros_pad">
+      <static>true</static>
+      <pose>30 0 0.05 0 0 0</pose>
+      <link name="link">
+        <visual name="vis">
+          <geometry><cylinder><radius>3</radius><length>0.1</length></cylinder></geometry>
+          <material>
+            <ambient>0.2 0.3 0.2 1</ambient>
+            <diffuse>0.3 0.4 0.3 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

@@ -1,0 +1,86 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="quadrotor">
+    <pose>0 0 0.1 0 0 0</pose>
+
+    <link name="base_link">
+      <!-- Hedef drone'lar drone_pilot_node tarafindan teleport ile surulur.
+           Kinematik + yercekimsiz olmalari fizik motorunun komut edilen
+           poza karsi calisip irtifa kaybettirmesini onler. -->
+      <gravity>false</gravity>
+      <kinematic>true</kinematic>
+      <inertial>
+        <mass>1.5</mass>
+        <inertia>
+          <ixx>0.029</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.029</iyy><iyz>0</iyz>
+          <izz>0.055</izz>
+        </inertia>
+      </inertial>
+
+      <!-- Govde -->
+      <collision name="body_col">
+        <geometry><box><size>0.4 0.4 0.1</size></box></geometry>
+      </collision>
+      <visual name="body_vis">
+        <geometry><box><size>0.4 0.4 0.08</size></box></geometry>
+        <material>
+          <ambient>0.15 0.15 0.15 1</ambient>
+          <diffuse>0.2 0.2 0.2 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Kollar -->
+      <visual name="arm_fr">
+        <pose>0.15 -0.15 0 0 0 -0.785</pose>
+        <geometry><box><size>0.3 0.02 0.02</size></box></geometry>
+        <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="arm_fl">
+        <pose>0.15 0.15 0 0 0 0.785</pose>
+        <geometry><box><size>0.3 0.02 0.02</size></box></geometry>
+        <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="arm_br">
+        <pose>-0.15 -0.15 0 0 0 0.785</pose>
+        <geometry><box><size>0.3 0.02 0.02</size></box></geometry>
+        <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+      <visual name="arm_bl">
+        <pose>-0.15 0.15 0 0 0 -0.785</pose>
+        <geometry><box><size>0.3 0.02 0.02</size></box></geometry>
+        <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.4 0.4 0.4 1</diffuse></material>
+      </visual>
+
+      <!-- Motorlar (silindir) -->
+      <visual name="motor_fr">
+        <pose>0.21 -0.21 0.04 0 0 0</pose>
+        <geometry><cylinder><radius>0.08</radius><length>0.02</length></cylinder></geometry>
+        <material><ambient>0.7 0.1 0.1 1</ambient><diffuse>0.8 0.15 0.15 1</diffuse></material>
+      </visual>
+      <visual name="motor_fl">
+        <pose>0.21 0.21 0.04 0 0 0</pose>
+        <geometry><cylinder><radius>0.08</radius><length>0.02</length></cylinder></geometry>
+        <material><ambient>0.1 0.7 0.1 1</ambient><diffuse>0.15 0.8 0.15 1</diffuse></material>
+      </visual>
+      <visual name="motor_br">
+        <pose>-0.21 -0.21 0.04 0 0 0</pose>
+        <geometry><cylinder><radius>0.08</radius><length>0.02</length></cylinder></geometry>
+        <material><ambient>0.1 0.7 0.1 1</ambient><diffuse>0.15 0.8 0.15 1</diffuse></material>
+      </visual>
+      <visual name="motor_bl">
+        <pose>-0.21 0.21 0.04 0 0 0</pose>
+        <geometry><cylinder><radius>0.08</radius><length>0.02</length></cylinder></geometry>
+        <material><ambient>0.7 0.1 0.1 1</ambient><diffuse>0.8 0.15 0.15 1</diffuse></material>
+      </visual>
+
+      <!-- Kamera (alt) -->
+      <visual name="camera">
+        <pose>0.1 0 -0.06 0 0 0</pose>
+        <geometry><box><size>0.04 0.04 0.03</size></box></geometry>
+        <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.15 0.15 0.15 1</diffuse></material>
+      </visual>
+    </link>
+
+  </model>
+</sdf>

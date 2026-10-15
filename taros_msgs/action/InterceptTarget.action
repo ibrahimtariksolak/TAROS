@@ -1,0 +1,15 @@
+# Goal
+uint32 track_id
+---
+# Result
+bool success
+float64 miss_distance
+float64 flight_time
+uint32 engagement_id
+---
+# Feedback
+float64 distance_to_target
+float64 time_to_impact
+float64 interceptor_speed
+geometry_msgs/Point interceptor_position
+geometry_msgs/Point target_position
