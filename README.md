@@ -1,71 +1,85 @@
-# TAROS — Anti-Drone Savunma Sistemi Simülatörü
+# TAROS
 
-ROS 2 tabanlı, modüler bir **C-UAS (Counter-Unmanned Aerial Systems)** test yatağı.
-Çoklu sensör füzyonu, çoklu hedef takibi, tehdit değerlendirme ve müdahale
-zincirinin tamamını Gazebo üzerinde simüle eder.
+**T**estbed for **A**utonomous **R**esponse on **ROS 2** — insansız hava aracı
+savunma sistemleri (C-UAS) için modüler bir simülasyon test yatağı.
 
-> **Kapsam notu:** Bu proje tamamen bir simülasyon ve araştırma test yatağıdır.
-> Gerçek donanım kontrolü içermez. Müdahale zinciri tasarım gereği
-> **man-in-the-loop**'tur: operatör yetkisi olmadan hiçbir efektör devreye girmez.
+**Anahtar kelimeler:** counter-UAS, çoklu sensör füzyonu, çoklu hedef takibi,
+genişletilmiş Kalman filtresi, hedef-silah ataması, ROS 2, Gazebo
 
 ---
 
-## Neden bu proje
+## Özet
 
-Düşük maliyetli İHA'lar modern hava savunmasının en hızlı büyüyen tehdit
-sınıfı. Buna karşı geliştirilen sistemlerin test edilmesi pahalı ve riskli.
-TAROS, algılama → takip → sınıflandırma → karar → müdahale zincirini
-tekrarlanabilir, ölçülebilir senaryolar altında çalıştırmayı amaçlıyor.
+Düşük maliyetli insansız hava araçları, hava savunmasında hızla büyüyen bir
+tehdit sınıfı oluşturmaktadır. Bu tehdide karşı geliştirilen algılama ve
+müdahale sistemlerinin saha koşullarında denenmesi maliyetli ve kısıtlıdır.
+TAROS, algılama–takip–sınıflandırma–karar–müdahale zincirinin tamamını
+tekrarlanabilir senaryolar altında çalıştırmayı amaçlayan açık kaynaklı bir
+simülasyon altyapısıdır.
 
-Projenin ölçülebilir iddiası: **EKF tabanlı çoklu sensör füzyonunun, tek
-sensöre kıyasla takip doğruluğunu ve yanlış alarm oranını ne kadar
-iyileştirdiğini sayısal olarak göstermek.**
+Çalışmanın sınanabilir savı şudur: *radar, elektro-optik/kızılötesi ve akustik
+ölçümlerin genişletilmiş Kalman filtresi (EKF) ile birleştirilmesi, tek
+sensörlü duruma kıyasla takip doğruluğunu ve yanlış alarm oranını ölçülebilir
+biçimde iyileştirir.* Altyapı, bu savı karşılaştırmalı deneylerle sınamak
+üzere tasarlanmıştır.
+
+### Kapsam ve amaç sınırı
+
+Bu depo yalnızca bir simülasyon ve araştırma test yatağıdır; gerçek donanım
+denetimi içermez ve herhangi bir fiziksel sisteme komut üretmez. Müdahale
+zinciri tasarım gereği operatör onayına bağlıdır (*man-in-the-loop*): yetki
+verilmeden hiçbir efektör devreye girmez. Bu kısıt, mimarinin bir yapılandırma
+seçeneği değil, durum makinesinin değiştirilemez bir aşamasıdır.
 
 ---
 
-## Sistem mimarisi
+## 1. Sistem mimarisi
+
+İşlem hattı dört katmandan oluşur. Hedef üretim katmanı, takip başarımını
+ölçmek için referans (*ground truth*) veri üretir; bu veri algılama
+katmanından yalıtılmıştır.
 
 ```
-          ┌──────────────── Hedef üretimi ────────────────┐
-          │  scenario_manager → drone_spawner → drone_pilot │
-          └───────────────────────┬─────────────────────────┘
-                                  │ ground truth (referans)
-                                  ▼
-  ┌─ Algılama ─┐    ┌─ Füzyon ─┐    ┌─ Karar ─┐    ┌─ Müdahale ─┐
-  │ radar      │    │          │    │ tehdit  │    │ RF jammer  │
-  │ EO/IR      ├───►│   EKF    ├───►│ skoru   ├───►│ GPS spoof  │
-  │ akustik    │    │ + MTT    │    │ + WTA   │    │ interceptor│
-  └────────────┘    └──────────┘    └─────────┘    └────────────┘
-                                  │
-                        ┌─────────┴─────────┐
-                        │  C2 arayüzü / AAR │
-                        └───────────────────┘
+Hedef üretimi
+  scenario_manager -> drone_spawner -> drone_pilot
+                                          |
+                                          +--> referans iz verisi
+                                          v
+Algılama            Füzyon              Karar               Müdahale
+  radar               EKF                 tehdit skoru        RF karıştırma
+  EO/IR        -->    çoklu hedef  -->    niyet analizi -->   GPS aldatma
+  akustik             takibi              hedef-silah         kinetik önleyici
+                                          ataması
+                                          |
+                                          v
+                              Komuta kontrol arayüzü
+                              Muharebe sonrası analiz
 ```
 
-### Paketler
+### 1.1 Paket yapısı
 
 | Paket | Sorumluluk | Durum |
 |---|---|---|
-| `taros_msgs` | Ortak mesaj / servis / action tanımları | ✅ Hazır |
-| `taros_gazebo` | Dünya, hedef modelleri, spawner, uçuş kontrolü | ✅ Hazır |
-| `taros_sensor` | Radar, EO/IR, akustik sensör simülasyonu | 🚧 Planlandı |
-| `taros_tracker` | EKF füzyonu, çoklu hedef takibi (MTT) | 🚧 Planlandı |
-| `taros_classifier` | Sınıflandırma, yol tahmini, niyet analizi | 🚧 Planlandı |
-| `taros_effector` | Soft kill (EW) + hard kill (interceptor) | 🚧 Planlandı |
-| `taros_navigation` | UGV otonom intikal, mevzi seçimi | 🚧 Planlandı |
-| `taros_iads` | Çoklu birlik koordinasyonu, kapsama optimizasyonu | 🚧 Planlandı |
-| `taros_sigint` | RF analizi, operatör konumlandırma (TDOA) | 🚧 Planlandı |
-| `taros_terrain` | Arazi analizi, radar görüş hattı, kör alanlar | 🚧 Planlandı |
-| `taros_environment` | Hava koşulları, sensör performans degradasyonu | 🚧 Planlandı |
-| `taros_aar` | Muharebe sonrası analiz, replay, metrikler | 🚧 Planlandı |
-| `taros_c2` | Komuta kontrol arayüzü köprüsü | 🚧 Planlandı |
-| `taros_bringup` | Sistem genelinde launch | 🚧 Planlandı |
+| `taros_msgs` | Ortak mesaj, servis ve eylem tanımları | Uygulandı |
+| `taros_gazebo` | Simülasyon dünyası, hedef modelleri, uçuş denetimi | Uygulandı |
+| `taros_sensor` | Radar, EO/IR ve akustik sensör modelleri | Planlandı |
+| `taros_tracker` | EKF füzyonu, çoklu hedef takibi | Planlandı |
+| `taros_classifier` | Sınıflandırma, yörünge kestirimi, niyet analizi | Planlandı |
+| `taros_effector` | Elektronik harp ve kinetik önleme efektörleri | Planlandı |
+| `taros_navigation` | Kara aracı özerk intikali, mevzi seçimi | Planlandı |
+| `taros_iads` | Çoklu birlik eşgüdümü, kapsama eniyilemesi | Planlandı |
+| `taros_sigint` | RF sinyal analizi, operatör konumlandırma | Planlandı |
+| `taros_terrain` | Arazi analizi, radar görüş hattı, kör bölgeler | Planlandı |
+| `taros_environment` | Hava koşulları, sensör başarım düşümü | Planlandı |
+| `taros_aar` | Kayıt, yeniden oynatma, başarım ölçütleri | Planlandı |
+| `taros_c2` | Komuta kontrol arayüzü köprüsü | Planlandı |
+| `taros_bringup` | Sistem genelinde başlatma yapılandırması | Planlandı |
 
 ---
 
-## Kurulum
+## 2. Kurulum
 
-**Gereksinimler:** Ubuntu 22.04, ROS 2 Humble, Gazebo Classic 11
+Gereksinimler: Ubuntu 22.04, ROS 2 Humble, Gazebo Classic 11.
 
 ```bash
 cd ~/ros2_ws
@@ -75,74 +89,117 @@ source install/setup.bash
 
 ---
 
-## Çalıştırma
+## 3. Kullanım
 
 ```bash
 ros2 launch taros_gazebo taros_sim.launch.py scenario:=swarm_saturate
 ```
 
-### Senaryolar
+### 3.1 Senaryolar
 
-| Senaryo | Açıklama | Hedef sayısı |
+| Senaryo | Tanım | Hedef sayısı |
 |---|---|---|
-| `single_recon` | Tek quadrotor keşif uçuşu | 1 |
-| `dual_probe` | İki farklı yönden sızma | 2 |
-| `swarm_wave` | Dalga saldırısı | 10 |
-| `swarm_saturate` | Her yönden doyurma saldırısı | 20 |
-| `mixed_loiter` | Keşif + loiter + saldırı karışık | 3 |
+| `single_recon` | Tek döner kanatlı keşif uçuşu | 1 |
+| `dual_probe` | İki ayrı eksenden eşzamanlı yaklaşma | 2 |
+| `swarm_wave` | Tek eksenli dalga saldırısı | 10 |
+| `swarm_saturate` | Çok eksenli doyurma saldırısı | 20 |
+| `mixed_loiter` | Keşif, bekleme ve saldırı profillerinin bileşimi | 3 |
 
-### Launch argümanları
+### 3.2 Başlatma parametreleri
 
-| Argüman | Varsayılan | Açıklama |
+| Parametre | Varsayılan | Tanım |
 |---|---|---|
-| `scenario` | `single_recon` | Tehdit senaryosu |
-| `gui` | `true` | Gazebo arayüzü (`false` = headless) |
-| `spawn_delay` | `2.0` | Hedefler arası spawn gecikmesi [s] |
-| `update_rate` | `30.0` | Uçuş kontrol döngüsü frekansı [Hz] |
-| `verbose` | `false` | Gazebo ayrıntılı günlüğü |
+| `scenario` | `single_recon` | Çalıştırılacak tehdit senaryosu |
+| `gui` | `true` | Gazebo arayüzü; `false` başsız çalıştırma |
+| `spawn_delay` | `2.0` | Hedefler arası üretim gecikmesi [s] |
+| `update_rate` | `30.0` | Uçuş denetim döngüsü frekansı [Hz] |
+| `verbose` | `false` | Ayrıntılı Gazebo günlüğü |
 
-### Çıktıyı izleme
+### 3.3 Çıktının izlenmesi
 
 ```bash
-# Aktif hedeflerin ground truth verisi
 ros2 topic echo /taros/ground_truth/tracks
-
-# Yayın frekansı
-ros2 topic hz /taros/ground_truth/tracks
+ros2 topic hz   /taros/ground_truth/tracks
 ```
 
 ---
 
-## Doğrulanmış davranış
+## 4. Yöntem
 
-Aşağıdaki ölçümler izole bir ROS domain'inde, headless Gazebo ile alındı:
+### 4.1 Hedeflerin kinematik modellenmesi
 
-| Ölçüm | Sonuç |
-|---|---|
-| 20 hedef eşzamanlı spawn | 20/20 başarılı, 0 erken düşme |
-| Ground truth yayın frekansı (20 hedef) | 30.2 Hz (hedef 30 Hz, degradasyon yok) |
-| Mesaj başına hedef sayısı | Sabit 20 |
-| Durgun hedefte irtifa tutma | 8 s boyunca 0.00000 m sapma |
-| Sınıf dağılımı (`swarm_saturate`) | 10 quad / 5 askeri / 5 fixedwing (senaryo tanımıyla birebir) |
-| Karışık davranış (`mixed_loiter`) | 3/3 hedef, RECON + LOITER + ATTACK eşzamanlı |
-| `colcon test` | 72 test, 0 hata, 0 başarısızlık |
+Hedef hava araçları tam aerodinamik modelle değil, kinematik olarak
+sürülmektedir. Bu bilinçli bir modelleme kararıdır: çalışmanın doğrulama
+nesnesi hedeflerin uçuş dinamiği değil, algılama ve takip zinciridir.
+Hedeflere öngörülebilir ve tekrarlanabilir yörüngeler verilmesi, takip
+hatasının kaynağının sensör ve füzyon katmanına yalıtılmasını sağlar.
+
+Model tanımlarında `<gravity>false</gravity>` ve `<kinematic>true</kinematic>`
+kullanılır. Aksi durumda fizik çözücü, komut edilen konuma karşı çalışarak
+irtifa kaybına yol açmaktadır.
+
+### 4.2 Durum bütünlüğü
+
+Uçuş denetleyicisi konumu simülatörden geri okumaz; kendi durumunu yetkili
+kaynak olarak tutar ve ileri entegre eder. Geri okumaya dayalı ilk tasarımda
+yerçekimi sapması bir geri besleme döngüsüne girerek hedeflerin yavaşça
+alçalmasına neden olmuştur (6 saniyede 0.4 m). İç durum entegrasyonuna
+geçildiğinde sapma ölçüm çözünürlüğünde sıfırlanmıştır (bkz. Bölüm 5).
+
+### 4.3 Görev planlarının devri
+
+Hedef üretici, `transient_local` dayanıklılık politikasıyla
+`taros/drone_flight_plan` konusunu yayımlar. Böylece uçuş denetleyicisi
+üreticiden sonra başlatılsa bile mevcut görev planlarını alır; başlatma
+sırası bir bağımlılık oluşturmaz.
+
+### 4.4 Hedef yaşam döngüsü
+
+Bir hedef, simülatör model listesinde en az bir kez doğrulanmadan imha
+denetimine girmez. İlk tasarımda model listesi güncellemesi hedef üretiminin
+birkaç milisaniye gerisinde kaldığı için, yeni üretilmiş hedefler imha
+edilmiş sayılmaktaydı. Bu durum, çok hedefli senaryolarda hedeflerin önemli
+bir bölümünün sessizce kaybına yol açan bir yarış koşuluydu.
 
 ---
 
-## Girdi doğrulama
+## 5. Doğrulama
 
-`taros/spawn_drone` servisi harici girdi kabul ettiği için
-[`validation.py`](taros_gazebo/taros_gazebo/validation.py) kapıda iki risk
-sınıfını kapatır:
+### 5.1 Ölçüm yöntemi
 
-1. **Yol kaçışı.** `drone_type` dosya yoluna giriyor; whitelist dışı bir
-   değer (`../../etc/passwd` gibi) dosya sistemine erişim açardı.
-2. **NaN / sonsuz sayısal değer.** Bunlar sessizce Gazebo'ya ve ground truth
-   akışına sızar, oradan da takip/füzyon zincirini geri dönülemez şekilde
-   zehirler.
+Ölçümler, çalışan diğer süreçlerden yalıtılmış bir ortamda alınmıştır: ayrı
+`ROS_DOMAIN_ID`, ayrı Gazebo ana süreç portu, `ROS_LOCALHOST_ONLY=1` ve başsız
+(`gui:=false`) çalıştırma. İz verisi doğrudan `taros/ground_truth/tracks`
+konusundan örneklenmiş, konum farkları ölçüm penceresi süresine bölünerek
+bağımsız hız kestirimi yapılmış ve bildirilen hızla karşılaştırılmıştır.
 
-Doğrulama modülü bilinçli olarak ROS'tan bağımsızdır, böylece kurallar
-simülasyon ayakta olmadan test edilebilir:
+### 5.2 Sonuçlar
+
+| Ölçüt | Sonuç |
+|---|---|
+| Eşzamanlı hedef üretimi | 20/20; erken kayıp yok |
+| İz verisi yayın frekansı (20 hedef) | 30.2 Hz; hedef 30 Hz, başarım düşümü gözlenmedi |
+| İleti başına hedef sayısı | 181 örnekte değişmez 20 |
+| Durgun hedefte irtifa tutma | 8 s boyunca 0.00000 m sapma |
+| Sınıf dağılımı (`swarm_saturate`) | 10 / 5 / 5; senaryo tanımıyla birebir |
+| Çoklu profil (`mixed_loiter`) | 3/3 hedef; keşif, bekleme, saldırı eşzamanlı |
+| Birim ve biçim testleri | 72 test; hata ve başarısızlık yok |
+
+### 5.3 Girdi doğrulama
+
+`taros/spawn_drone` servisi harici girdi kabul ettiğinden,
+[`validation.py`](taros_gazebo/taros_gazebo/validation.py) iki risk sınıfını
+giriş noktasında kapatır:
+
+1. **Dizin kaçışı.** `drone_type` alanı dosya yolu oluşturmada kullanılır.
+   İzin listesi dışı bir değer, dosya sistemine yetkisiz erişime imkân
+   verebilirdi.
+2. **Tanımsız sayısal değer.** `NaN` ve sonsuz değerler sessizce simülatöre ve
+   referans iz akışına yayılır; oradan da kestirim zincirine geri dönüşsüz
+   biçimde bulaşır.
+
+Doğrulama modülü ROS'tan bağımsız tutulmuştur; kurallar simülasyon
+çalıştırılmadan sınanabilir.
 
 ```bash
 colcon test --packages-select taros_gazebo
@@ -150,49 +207,82 @@ colcon test --packages-select taros_gazebo
 
 ---
 
-## Tasarım kararları
+## 6. Geçerlilik sınırları
 
-**Hedefler kinematik olarak sürülür.** Hedef drone'lar tam aerodinamik modelle
-değil, `drone_pilot_node` tarafından teleport ile hareket ettirilir. Amaç
-hedeflerin kendisini doğrulamak değil, algılama/takip zincirini beslemek.
-Modeller `<gravity>false</gravity>` ve `<kinematic>true</kinematic>` taşır;
-aksi halde fizik motoru komut edilen poza karşı çalışıp irtifa kaybettiriyordu.
+Çalışmanın sonuçları aşağıdaki kısıtlar çerçevesinde yorumlanmalıdır.
 
-**Pilot otoritatif iç durum tutar.** Pozisyon Gazebo'dan geri okunmaz. Geri
-okuma denendiğinde yerçekimi sapması bir geri besleme döngüsüne girip
-hedefleri yavaşça batırıyordu (6 saniyede 0.4 m). İç durum entegrasyonuna
-geçildiğinde sapma tam olarak sıfırlandı.
-
-**Uçuş planları latched topic ile devredilir.** Spawner `transient_local`
-QoS ile `taros/drone_flight_plan` yayınlar, böylece pilot daha sonra başlasa
-bile planları alır.
-
-**Hedefler ancak bir kez görüldükten sonra düşürülebilir.** `model_states`
-güncellemesi spawn'dan birkaç milisaniye geride kaldığı için, yeni doğmuş
-hedefi anında imha edilmiş sayan bir race condition oluşuyordu. Artık bir
-hedef `model_states`'te en az bir kez teyit edilene kadar imha kontrolüne
-girmez.
-
-**`gazebo.launch.py` yerine `gzserver`/`gzclient` doğrudan include edilir.**
-`gazebo.launch.py` alt launch dosyalarına `launch_arguments` iletmez, bu
-yüzden `world` gibi argümanların geçtiğine güvenmek kırılgandır.
-
-**State plugin dünya dosyasında tanımlıdır.** `libgazebo_ros_state.so` bir
-`WorldPlugin`'dir; `gzserver`'a `-s` ile verilirse `SystemPlugin` olarak
-aranır ve sessizce yüklenmez. `/gazebo/model_states` ve
-`/gazebo/set_entity_state` arayüzleri bu plugin'e bağlı.
+- **Hedef dinamiği.** Kinematik hedef modeli aerodinamik olarak geçerli
+  değildir. Rüzgâr etkisi, manevra sınırları ve itki kısıtları
+  modellenmemiştir; dolayısıyla manevra kabiliyeti yüksek hedeflere karşı
+  takip başarımı üzerine çıkarım yapılamaz (Bölüm 4.1).
+- **Sensör modelleri.** Radar, EO/IR ve akustik modeller henüz
+  uygulanmamıştır. Mevcut sürümde yalnızca referans iz verisi üretilmektedir;
+  gürültü, çözünürlük ve tespit olasılığı modelleri eklenene kadar füzyon
+  kazancına ilişkin bir sayısal sonuç sunulmamaktadır.
+- **RF yayılımı.** Sinyal istihbaratı ve karıştırma katmanları, gerçek
+  elektromanyetik yayılım çözümü içermeyecek; menzil ve engel etkileri
+  basitleştirilmiş modellerle temsil edilecektir.
+- **Fizik çözücü.** Gazebo Classic ODE çözücüsü 250 Hz güncelleme hızıyla
+  yapılandırılmıştır. Yüksek hızlı çarpışma olaylarının çözünürlüğü bu adım
+  boyutuyla sınırlıdır.
+- **Ölçek.** Bildirilen başarım ölçümleri 20 eşzamanlı hedefe kadar
+  geçerlidir; bu sınırın üzerindeki davranış sınanmamıştır.
 
 ---
 
-## Yol haritası
+## 7. Yol haritası
 
-- **Faz 1 — Temel ve algılama:** dünya, hedef üretimi, uçuş kontrolü ✅ · sensör simülasyonu 🚧 · EKF füzyonu 🚧
-- **Faz 2 — Zeka:** görsel sınıflandırma, yol tahmini, niyet analizi, SIGINT
-- **Faz 3 — Müdahale:** soft/hard kill, swarm'a karşı WTA, UGV intikali, arazi analizi
-- **Faz 4 — Entegrasyon:** IADS koordinasyonu, C2 arayüzü, AAR ve metrikler
+| Aşama | İçerik |
+|---|---|
+| 1 | Simülasyon altyapısı ve hedef üretimi; sensör modelleri; EKF füzyonu |
+| 2 | Görsel sınıflandırma, yörünge kestirimi, niyet analizi, sinyal istihbaratı |
+| 3 | Efektör modelleri, hedef-silah ataması, kara aracı intikali, arazi analizi |
+| 4 | Çoklu birlik eşgüdümü, komuta kontrol arayüzü, muharebe sonrası analiz |
+
+Birinci aşamanın hedef üretim katmanı tamamlanmıştır. Sırada radar, EO/IR ve
+akustik sensör modelleri ile hava koşullarına bağlı başarım düşümü
+bulunmaktadır.
+
+---
+
+## 8. Kaynaklar
+
+Aşağıdaki çalışmalar, planlanan katmanların yöntemsel temelini oluşturur.
+
+1. Bar-Shalom, Y., Li, X. R., Kirubarajan, T. (2001). *Estimation with
+   Applications to Tracking and Navigation: Theory, Algorithms and Software.*
+   Wiley.
+2. Blackman, S., Popoli, R. (1999). *Design and Analysis of Modern Tracking
+   Systems.* Artech House.
+3. Kuhn, H. W. (1955). The Hungarian method for the assignment problem.
+   *Naval Research Logistics Quarterly*, 2(1–2), 83–97.
+4. Manne, A. S. (1958). A target-assignment problem. *Operations Research*,
+   6(3), 346–351.
+5. Zarchan, P. *Tactical and Strategic Missile Guidance.* AIAA Progress in
+   Astronautics and Aeronautics.
+6. Koenig, N., Howard, A. (2004). Design and use paradigms for Gazebo, an
+   open-source multi-robot simulator. *IEEE/RSJ International Conference on
+   Intelligent Robots and Systems (IROS)*.
+7. Macenski, S., Foote, T., Gerkey, B., Lalancette, C., Woodall, W. (2022).
+   Robot Operating System 2: Design, architecture, and uses in the wild.
+   *Science Robotics*, 7(66).
+
+---
+
+## 9. Atıf
+
+```bibtex
+@software{solak_taros,
+  author  = {Solak, Ibrahim Tarik},
+  title   = {{TAROS}: Testbed for Autonomous Response on {ROS 2}},
+  year    = {2026},
+  url     = {https://github.com/ibrahimtariksolak/TAROS},
+  license = {MIT}
+}
+```
 
 ---
 
 ## Lisans
 
-MIT — ayrıntılar için [LICENSE](LICENSE).
+MIT. Ayrıntılar için [LICENSE](LICENSE) dosyasına bakınız.
