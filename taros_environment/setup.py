@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'weather_node = taros_environment.weather_node:main',
         ],
     },
 )

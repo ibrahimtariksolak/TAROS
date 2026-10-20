@@ -24,6 +24,9 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'radar_sim = taros_sensor.radar_sim_node:main',
+            'eoir_camera = taros_sensor.eoir_camera_node:main',
+            'acoustic_sim = taros_sensor.acoustic_sim_node:main',
         ],
     },
 )

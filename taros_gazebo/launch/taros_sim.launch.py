@@ -1,5 +1,5 @@
 """
-TAROS simulasyonunu baslatir: Gazebo + hedef uretimi + ucus kontrolu.
+TAROS simulasyonunu baslatir: Gazebo + hedef uretimi + ucus kontrolu + sensorler.
 
 gazebo.launch.py yerine gzserver/gzclient dosyalari dogrudan include edilir:
 gazebo.launch.py alt launch dosyalarina launch_arguments iletmez, bu yuzden
@@ -80,6 +80,38 @@ def generate_launch_description():
         }],
     )
 
+    weather_node = Node(
+        package='taros_environment',
+        executable='weather_node',
+        name='weather_node',
+        output='screen',
+        emulate_tty=True,
+    )
+
+    radar_sim = Node(
+        package='taros_sensor',
+        executable='radar_sim',
+        name='radar_sim',
+        output='screen',
+        emulate_tty=True,
+    )
+
+    eoir_camera = Node(
+        package='taros_sensor',
+        executable='eoir_camera',
+        name='eoir_camera',
+        output='screen',
+        emulate_tty=True,
+    )
+
+    acoustic_sim = Node(
+        package='taros_sensor',
+        executable='acoustic_sim',
+        name='acoustic_sim',
+        output='screen',
+        emulate_tty=True,
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument(
             'scenario', default_value='single_recon',
@@ -103,4 +135,8 @@ def generate_launch_description():
         drone_spawner,
         drone_pilot,
         scenario_manager,
+        weather_node,
+        radar_sim,
+        eoir_camera,
+        acoustic_sim,
     ])

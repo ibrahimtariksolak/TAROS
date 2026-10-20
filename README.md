@@ -62,7 +62,7 @@ Algılama            Füzyon              Karar               Müdahale
 |---|---|---|
 | `taros_msgs` | Ortak mesaj, servis ve eylem tanımları | Uygulandı |
 | `taros_gazebo` | Simülasyon dünyası, hedef modelleri, uçuş denetimi | Uygulandı |
-| `taros_sensor` | Radar, EO/IR ve akustik sensör modelleri | Planlandı |
+| `taros_sensor` | Radar, EO/IR ve akustik sensör modelleri | Uygulandı |
 | `taros_tracker` | EKF füzyonu, çoklu hedef takibi | Planlandı |
 | `taros_classifier` | Sınıflandırma, yörünge kestirimi, niyet analizi | Planlandı |
 | `taros_effector` | Elektronik harp ve kinetik önleme efektörleri | Planlandı |
@@ -70,7 +70,7 @@ Algılama            Füzyon              Karar               Müdahale
 | `taros_iads` | Çoklu birlik eşgüdümü, kapsama eniyilemesi | Planlandı |
 | `taros_sigint` | RF sinyal analizi, operatör konumlandırma | Planlandı |
 | `taros_terrain` | Arazi analizi, radar görüş hattı, kör bölgeler | Planlandı |
-| `taros_environment` | Hava koşulları, sensör başarım düşümü | Planlandı |
+| `taros_environment` | Hava koşulları, sensör başarım düşümü | Uygulandı |
 | `taros_aar` | Kayıt, yeniden oynatma, başarım ölçütleri | Planlandı |
 | `taros_c2` | Komuta kontrol arayüzü köprüsü | Planlandı |
 | `taros_bringup` | Sistem genelinde başlatma yapılandırması | Planlandı |
@@ -120,6 +120,11 @@ ros2 launch taros_gazebo taros_sim.launch.py scenario:=swarm_saturate
 ```bash
 ros2 topic echo /taros/ground_truth/tracks
 ros2 topic hz   /taros/ground_truth/tracks
+
+ros2 topic echo /taros/sensor/radar/returns
+ros2 topic echo /taros/sensor/eoir/detections
+ros2 topic echo /taros/sensor/acoustic/detections
+ros2 topic echo /taros/environment/weather
 ```
 
 ---
@@ -153,7 +158,30 @@ Hedef üretici, `transient_local` dayanıklılık politikasıyla
 üreticiden sonra başlatılsa bile mevcut görev planlarını alır; başlatma
 sırası bir bağımlılık oluşturmaz.
 
-### 4.4 Hedef yaşam döngüsü
+### 4.4 Sensör modelleri
+
+Üç bağımsız sensör aynı referans iz verisini tüketir; her biri kendi fizik
+modeline göre tespit üretir veya üretmez.
+
+**Radar.** X-band darbeli Doppler model. Radar denklemi SNR hesabı, Swerling-I
+tespit olasılığı, menzil/açı gürültüsü (Cramér-Rao alt sınırına orantılı) ve
+radyal hız (Doppler) ölçümü içerir. Yağmur zayıflaması ITU-R P.838
+basitleştirilmiş modeliyle uygulanır.
+
+**EO/IR.** Pan-tilt gimbal üzerinde dar görüşlü kamera. En yakın hedefe
+otomatik kilit, görüş alanı dışı hedefleri tespit etmez. Yönelim tabanlı
+(*bearing-only*) ölçüm üretir; menzil tahmini yalnızca 1 km altında verilir.
+Görünürlük, yağmur ve gece koşulları etkili menzili düşürür.
+
+**Akustik.** 4 elemanlı mikrofon dizisi. Küresel yayılım kaybı, rüzgâr gürültü
+modeli, geliş yönü (DOA) kestirimi ve frekans imzası eşleştirmesi içerir.
+Etkili menzil ~800 m ile sınırlıdır.
+
+**Hava koşulları.** Tüm sensörlerin başarımı `taros_environment/weather_node`
+tarafından yayımlanan meteorolojik koşullara bağlıdır. `SetWeather` servisi
+ile senaryo içinde dinamik olarak değiştirilebilir.
+
+### 4.5 Hedef yaşam döngüsü
 
 Bir hedef, simülatör model listesinde en az bir kez doğrulanmadan imha
 denetimine girmez. İlk tasarımda model listesi güncellemesi hedef üretiminin
@@ -183,7 +211,13 @@ bağımsız hız kestirimi yapılmış ve bildirilen hızla karşılaştırılm�
 | Durgun hedefte irtifa tutma | 8 s boyunca 0.00000 m sapma |
 | Sınıf dağılımı (`swarm_saturate`) | 10 / 5 / 5; senaryo tanımıyla birebir |
 | Çoklu profil (`mixed_loiter`) | 3/3 hedef; keşif, bekleme, saldırı eşzamanlı |
-| Birim ve biçim testleri | 72 test; hata ve başarısızlık yok |
+| Radar SNR azalışı (menzil) | 5x menzil artışında SNR monoton azalır |
+| Yağmur: radar SNR düşümü | 20 mm/h yağışta ölçülebilir zayıflama |
+| EO/IR menzil düşümü (sis) | 2 km görünürlükte %80 menzil kaybı |
+| EO/IR menzil düşümü (gece) | %40 menzil kaybı |
+| Akustik SNR düşümü (rüzgâr) | 15 m/s rüzgârda ölçülebilir gürültü artışı |
+| DOA gürültüsü (düşük SNR) | Sonlu; sayısal taşma yok |
+| Birim ve biçim testleri | 112 test; hata ve başarısızlık yok |
 
 ### 5.3 Girdi doğrulama
 
@@ -215,10 +249,10 @@ colcon test --packages-select taros_gazebo
   değildir. Rüzgâr etkisi, manevra sınırları ve itki kısıtları
   modellenmemiştir; dolayısıyla manevra kabiliyeti yüksek hedeflere karşı
   takip başarımı üzerine çıkarım yapılamaz (Bölüm 4.1).
-- **Sensör modelleri.** Radar, EO/IR ve akustik modeller henüz
-  uygulanmamıştır. Mevcut sürümde yalnızca referans iz verisi üretilmektedir;
-  gürültü, çözünürlük ve tespit olasılığı modelleri eklenene kadar füzyon
-  kazancına ilişkin bir sayısal sonuç sunulmamaktadır.
+- **Sensör füzyonu.** Radar, EO/IR ve akustik sensör modelleri uygulanmış olup
+  her biri bağımsız tespit üretmektedir. Ancak EKF füzyon katmanı henüz
+  eklenmemiştir; tek sensör ile çoklu sensör başarımını karşılaştıran sayısal
+  bir sonuç henüz sunulmamaktadır.
 - **RF yayılımı.** Sinyal istihbaratı ve karıştırma katmanları, gerçek
   elektromanyetik yayılım çözümü içermeyecek; menzil ve engel etkileri
   basitleştirilmiş modellerle temsil edilecektir.
@@ -239,9 +273,8 @@ colcon test --packages-select taros_gazebo
 | 3 | Efektör modelleri, hedef-silah ataması, kara aracı intikali, arazi analizi |
 | 4 | Çoklu birlik eşgüdümü, komuta kontrol arayüzü, muharebe sonrası analiz |
 
-Birinci aşamanın hedef üretim katmanı tamamlanmıştır. Sırada radar, EO/IR ve
-akustik sensör modelleri ile hava koşullarına bağlı başarım düşümü
-bulunmaktadır.
+Birinci aşamanın hedef üretim katmanı ve sensör modelleri tamamlanmıştır.
+Sırada EKF çoklu sensör füzyonu ve çoklu hedef takibi bulunmaktadır.
 
 ---
 
