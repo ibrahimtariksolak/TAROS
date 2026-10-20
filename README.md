@@ -64,7 +64,7 @@ Algılama            Füzyon              Karar               Müdahale
 | `taros_gazebo` | Simülasyon dünyası, hedef modelleri, uçuş denetimi | Uygulandı |
 | `taros_sensor` | Radar, EO/IR ve akustik sensör modelleri | Uygulandı |
 | `taros_tracker` | EKF füzyonu, çoklu hedef takibi | Uygulandı |
-| `taros_classifier` | Sınıflandırma, yörünge kestirimi, niyet analizi | Planlandı |
+| `taros_classifier` | Sınıflandırma, yörünge kestirimi, niyet analizi | Uygulandı |
 | `taros_effector` | Elektronik harp ve kinetik önleme efektörleri | Planlandı |
 | `taros_navigation` | Kara aracı özerk intikali, mevzi seçimi | Planlandı |
 | `taros_iads` | Çoklu birlik eşgüdümü, kapsama eniyilemesi | Planlandı |
@@ -250,7 +250,11 @@ bağımsız hız kestirimi yapılmış ve bildirilen hızla karşılaştırılm�
 | Kovaryans simetrisi (50 döngü) | Simetri hatası < 1e-6 |
 | Macar algoritması eşleştirmesi | 2 iz / 2 ölçüm doğru eşlenir; kapı dışı reddedilir |
 | İz yaşam döngüsü | TENTATIVE → CONFIRMED → COASTING → DELETED geçişleri doğrulandı |
-| Birim ve biçim testleri | 155 test; hata ve başarısızlık yok |
+| Niyet sınıflandırması | ATTACK, LOITER, RECON, TRANSIT doğru atanır |
+| Tehdit skoru: yakın vs uzak | Yakın hedef yüksek skor alır |
+| Tehdit seviyeleri | GREEN/YELLOW/ORANGE/RED sınırları doğrulandı |
+| En yakın yaklaşma | Analitik çözüm; karşıdan gelen hedefte ~0 m |
+| Birim ve biçim testleri | 178 test; hata ve başarısızlık yok |
 
 ### 5.3 Girdi doğrulama
 
@@ -307,9 +311,10 @@ colcon test --packages-select taros_gazebo
 | 3 | Efektör modelleri, hedef-silah ataması, kara aracı intikali, arazi analizi |
 | 4 | Çoklu birlik eşgüdümü, komuta kontrol arayüzü, muharebe sonrası analiz |
 
-Birinci aşamanın hedef üretim katmanı, sensör modelleri ve EKF füzyon/takip
-katmanı tamamlanmıştır. Sırada görsel sınıflandırma, yörünge kestirimi ve
-niyet analizi bulunmaktadır.
+Birinci ve ikinci aşamalar büyük ölçüde tamamlanmıştır: hedef üretimi,
+sensör modelleri, EKF füzyon/takip katmanı, sınıflandırma ve tehdit
+değerlendirmesi. Sırada sinyal istihbaratı, efektör modelleri ve hedef-silah
+ataması bulunmaktadır.
 
 ---
 

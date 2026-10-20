@@ -120,6 +120,14 @@ def generate_launch_description():
         emulate_tty=True,
     )
 
+    classifier = Node(
+        package='taros_classifier',
+        executable='classifier',
+        name='classifier',
+        output='screen',
+        emulate_tty=True,
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument(
             'scenario', default_value='single_recon',
@@ -148,4 +156,5 @@ def generate_launch_description():
         eoir_camera,
         acoustic_sim,
         tracker,
+        classifier,
     ])

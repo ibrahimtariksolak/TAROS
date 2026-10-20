@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'classifier = taros_classifier.classifier_node:main',
         ],
     },
 )
