@@ -112,6 +112,14 @@ def generate_launch_description():
         emulate_tty=True,
     )
 
+    tracker = Node(
+        package='taros_tracker',
+        executable='tracker',
+        name='tracker',
+        output='screen',
+        emulate_tty=True,
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument(
             'scenario', default_value='single_recon',
@@ -139,4 +147,5 @@ def generate_launch_description():
         radar_sim,
         eoir_camera,
         acoustic_sim,
+        tracker,
     ])

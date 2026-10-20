@@ -63,7 +63,7 @@ Algılama            Füzyon              Karar               Müdahale
 | `taros_msgs` | Ortak mesaj, servis ve eylem tanımları | Uygulandı |
 | `taros_gazebo` | Simülasyon dünyası, hedef modelleri, uçuş denetimi | Uygulandı |
 | `taros_sensor` | Radar, EO/IR ve akustik sensör modelleri | Uygulandı |
-| `taros_tracker` | EKF füzyonu, çoklu hedef takibi | Planlandı |
+| `taros_tracker` | EKF füzyonu, çoklu hedef takibi | Uygulandı |
 | `taros_classifier` | Sınıflandırma, yörünge kestirimi, niyet analizi | Planlandı |
 | `taros_effector` | Elektronik harp ve kinetik önleme efektörleri | Planlandı |
 | `taros_navigation` | Kara aracı özerk intikali, mevzi seçimi | Planlandı |
@@ -125,6 +125,9 @@ ros2 topic echo /taros/sensor/radar/returns
 ros2 topic echo /taros/sensor/eoir/detections
 ros2 topic echo /taros/sensor/acoustic/detections
 ros2 topic echo /taros/environment/weather
+
+ros2 topic echo /taros/tracker/tracks
+ros2 topic hz   /taros/tracker/tracks
 ```
 
 ---
@@ -181,7 +184,32 @@ Etkili menzil ~800 m ile sınırlıdır.
 tarafından yayımlanan meteorolojik koşullara bağlıdır. `SetWeather` servisi
 ile senaryo içinde dinamik olarak değiştirilebilir.
 
-### 4.5 Hedef yaşam döngüsü
+### 4.5 Genişletilmiş Kalman filtresi füzyonu
+
+Üç sensörün asenkron ölçümleri tek bir 6-durumlu (`x, y, z, vx, vy, vz`)
+genişletilmiş Kalman filtresiyle birleştirilir. Radar ölçüm modeli dört
+boyutludur (menzil, azimut, yükseliş, Doppler hızı); EO/IR ve akustik
+modeller iki boyutludur (yalnızca yönelim). Her ölçüm modeli için analitik
+Jacobian hesaplanır.
+
+Süreç gürültüsü sabit beyaz gürültü ivme modeline dayanır (Bar-Shalom ve
+ark., 2001). Bu model, kısa vadeli manevralarda yeterli adaptasyon sağlar;
+uzun süreli yüksek manevra durumlarında IMM'e (Interactive Multiple Model)
+geçiş planlanmaktadır.
+
+### 4.6 Çoklu hedef takibi
+
+Veri ilişkilendirmede Mahalanobis mesafesi ile ki-kare kapılaması
+uygulanır; kapı dışı ölçümler eşleştirme dışında bırakılır. Kapılama
+sonrası Macar algoritması (Kuhn, 1955) ile küresel en yakın komşu (GNN)
+ataması yapılır.
+
+İz yaşam döngüsü: bir ölçüm mevcut izlerden hiçbiriyle eşleşmezse geçici
+(*tentative*) iz olarak başlatılır. Belirli sayıda (`M/N`) eşleşmeden sonra
+onaylı (*confirmed*) duruma geçer. Eşleşme kesildiğinde izleme (*coasting*)
+dönemine girer; zaman aşımında silinir.
+
+### 4.7 Hedef yaşam döngüsü
 
 Bir hedef, simülatör model listesinde en az bir kez doğrulanmadan imha
 denetimine girmez. İlk tasarımda model listesi güncellemesi hedef üretiminin
@@ -217,7 +245,12 @@ bağımsız hız kestirimi yapılmış ve bildirilen hızla karşılaştırılm�
 | EO/IR menzil düşümü (gece) | %40 menzil kaybı |
 | Akustik SNR düşümü (rüzgâr) | 15 m/s rüzgârda ölçülebilir gürültü artışı |
 | DOA gürültüsü (düşük SNR) | Sonlu; sayısal taşma yok |
-| Birim ve biçim testleri | 112 test; hata ve başarısızlık yok |
+| EKF radar yakınsaması | 30 iterasyonda 50 m içine yakınsar |
+| Üç sensör füzyonu: kovaryans | Tekli sensöre kıyasla kovaryans izi azalır |
+| Kovaryans simetrisi (50 döngü) | Simetri hatası < 1e-6 |
+| Macar algoritması eşleştirmesi | 2 iz / 2 ölçüm doğru eşlenir; kapı dışı reddedilir |
+| İz yaşam döngüsü | TENTATIVE → CONFIRMED → COASTING → DELETED geçişleri doğrulandı |
+| Birim ve biçim testleri | 155 test; hata ve başarısızlık yok |
 
 ### 5.3 Girdi doğrulama
 
@@ -249,10 +282,11 @@ colcon test --packages-select taros_gazebo
   değildir. Rüzgâr etkisi, manevra sınırları ve itki kısıtları
   modellenmemiştir; dolayısıyla manevra kabiliyeti yüksek hedeflere karşı
   takip başarımı üzerine çıkarım yapılamaz (Bölüm 4.1).
-- **Sensör füzyonu.** Radar, EO/IR ve akustik sensör modelleri uygulanmış olup
-  her biri bağımsız tespit üretmektedir. Ancak EKF füzyon katmanı henüz
-  eklenmemiştir; tek sensör ile çoklu sensör başarımını karşılaştıran sayısal
-  bir sonuç henüz sunulmamaktadır.
+- **Füzyon karşılaştırması.** EKF füzyon katmanı uygulanmıştır ve birim
+  testleri çoklu sensörün tekli sensöre kıyasla kovaryansı düşürdüğünü
+  doğrulamaktadır. Ancak kapsamlı Monte Carlo karşılaştırması henüz
+  yapılmamıştır; izleme doğruluğu ile yanlış alarm oranındaki sayısal
+  iyileşme henüz raporlanmamıştır.
 - **RF yayılımı.** Sinyal istihbaratı ve karıştırma katmanları, gerçek
   elektromanyetik yayılım çözümü içermeyecek; menzil ve engel etkileri
   basitleştirilmiş modellerle temsil edilecektir.
@@ -273,8 +307,9 @@ colcon test --packages-select taros_gazebo
 | 3 | Efektör modelleri, hedef-silah ataması, kara aracı intikali, arazi analizi |
 | 4 | Çoklu birlik eşgüdümü, komuta kontrol arayüzü, muharebe sonrası analiz |
 
-Birinci aşamanın hedef üretim katmanı ve sensör modelleri tamamlanmıştır.
-Sırada EKF çoklu sensör füzyonu ve çoklu hedef takibi bulunmaktadır.
+Birinci aşamanın hedef üretim katmanı, sensör modelleri ve EKF füzyon/takip
+katmanı tamamlanmıştır. Sırada görsel sınıflandırma, yörünge kestirimi ve
+niyet analizi bulunmaktadır.
 
 ---
 

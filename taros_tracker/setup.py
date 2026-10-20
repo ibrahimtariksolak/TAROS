@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'tracker = taros_tracker.tracker_node:main',
         ],
     },
 )
