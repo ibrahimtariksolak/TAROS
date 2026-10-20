@@ -128,6 +128,22 @@ def generate_launch_description():
         emulate_tty=True,
     )
 
+    rf_scanner = Node(
+        package='taros_sigint',
+        executable='rf_scanner',
+        name='rf_scanner',
+        output='screen',
+        emulate_tty=True,
+    )
+
+    effector = Node(
+        package='taros_effector',
+        executable='effector',
+        name='effector',
+        output='screen',
+        emulate_tty=True,
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument(
             'scenario', default_value='single_recon',
@@ -157,4 +173,6 @@ def generate_launch_description():
         acoustic_sim,
         tracker,
         classifier,
+        rf_scanner,
+        effector,
     ])

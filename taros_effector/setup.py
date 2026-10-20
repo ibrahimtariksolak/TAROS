@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'effector = taros_effector.effector_node:main',
         ],
     },
 )

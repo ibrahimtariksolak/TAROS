@@ -65,10 +65,10 @@ Algılama            Füzyon              Karar               Müdahale
 | `taros_sensor` | Radar, EO/IR ve akustik sensör modelleri | Uygulandı |
 | `taros_tracker` | EKF füzyonu, çoklu hedef takibi | Uygulandı |
 | `taros_classifier` | Sınıflandırma, yörünge kestirimi, niyet analizi | Uygulandı |
-| `taros_effector` | Elektronik harp ve kinetik önleme efektörleri | Planlandı |
+| `taros_effector` | Elektronik harp ve kinetik önleme efektörleri | Uygulandı |
 | `taros_navigation` | Kara aracı özerk intikali, mevzi seçimi | Planlandı |
 | `taros_iads` | Çoklu birlik eşgüdümü, kapsama eniyilemesi | Planlandı |
-| `taros_sigint` | RF sinyal analizi, operatör konumlandırma | Planlandı |
+| `taros_sigint` | RF sinyal analizi, operatör konumlandırma | Uygulandı |
 | `taros_terrain` | Arazi analizi, radar görüş hattı, kör bölgeler | Planlandı |
 | `taros_environment` | Hava koşulları, sensör başarım düşümü | Uygulandı |
 | `taros_aar` | Kayıt, yeniden oynatma, başarım ölçütleri | Planlandı |

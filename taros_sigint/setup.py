@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'rf_scanner = taros_sigint.rf_scanner_node:main',
         ],
     },
 )
