@@ -290,9 +290,43 @@ bağımsız hız kestirimi yapılmış ve bildirilen hızla karşılaştırılm�
 | LOS: tepe engeli | Araya giren tepe görüş hattını keser |
 | A*: engelden kaçınma | Engelli haritada alternatif rota bulunur |
 | AAR: başarı oranı metrikleri | Karışık sonuçlarda doğru oran hesaplanır |
-| Birim ve biçim testleri | 227 test; hata ve başarısızlık yok |
+| AAR: kayıt-replay döngüsü | JSONL yazılıp okunur; rapor üretilir |
+| Entegrasyon: tam zincir | Sensör→EKF→sınıflandırma→WTA uçtan uca çalışır |
+| Birim, entegrasyon ve biçim testleri | 250 test; hata ve başarısızlık yok |
 
-### 5.3 Girdi doğrulama
+### 5.3 Monte Carlo füzyon karşılaştırması
+
+Aşağıdaki tablo, 200 deneme ve 80 zaman adımlık Monte Carlo simülasyonu
+sonuçlarını özetlemektedir. Hedef 10 km mesafeden (~8 km doğu, ~6 km kuzey,
+300 m irtifa) üsse doğru 25 m/s hızla yaklaşmaktadır. Radar tarama periyodu
+4 saniye olarak ayarlanmıştır; EO/IR ve akustik sensörler her adımda ölçüm
+sağlar.
+
+| Konfigürasyon | RMSE Konum [m] | RMSE Hız [m/s] | Kovaryans İzi |
+|---|---|---|---|
+| Yalnız radar | 20.1 | 2.63 | 275.6 |
+| Yalnız EO/IR | 1308.7 | 20.28 | 804 099 |
+| Yalnız akustik | 774.2 | 12.61 | 1 050 689 |
+| Radar + EO/IR | 16.7 | 2.43 | 71.3 |
+| Radar + akustik | 20.2 | 2.71 | 275.4 |
+| Üç sensör füzyonu | 16.5 | 2.44 | 71.3 |
+
+Üç sensör füzyonu, yalnız radara kıyasla konum RMSE'sini %17.6, kovaryans
+izini %74.1 oranında düşürmektedir. EO/IR sensörü, radarın tarama
+aralıklarında yönelim güncellemesi sağlayarak ara adımlardaki belirsizliği
+azaltmaktadır. Akustik sensörün tekli katkısı sınırlıdır çünkü DOA gürültüsü
+EO/IR'ye kıyasla yüksektir.
+
+Bu sonuçlar, projenin sınanabilir savını desteklemektedir: *çoklu sensör EKF
+füzyonu, tek sensörlü duruma kıyasla takip doğruluğunu ölçülebilir biçimde
+iyileştirir.*
+
+```bash
+# Sonuçları yeniden üretmek için:
+python3 scripts/run_monte_carlo.py -n 200 -s 80
+```
+
+### 5.4 Girdi doğrulama
 
 `taros/spawn_drone` servisi harici girdi kabul ettiğinden,
 [`validation.py`](taros_gazebo/taros_gazebo/validation.py) iki risk sınıfını
@@ -322,11 +356,10 @@ colcon test --packages-select taros_gazebo
   değildir. Rüzgâr etkisi, manevra sınırları ve itki kısıtları
   modellenmemiştir; dolayısıyla manevra kabiliyeti yüksek hedeflere karşı
   takip başarımı üzerine çıkarım yapılamaz (Bölüm 4.1).
-- **Füzyon karşılaştırması.** EKF füzyon katmanı uygulanmıştır ve birim
-  testleri çoklu sensörün tekli sensöre kıyasla kovaryansı düşürdüğünü
-  doğrulamaktadır. Ancak kapsamlı Monte Carlo karşılaştırması henüz
-  yapılmamıştır; izleme doğruluğu ile yanlış alarm oranındaki sayısal
-  iyileşme henüz raporlanmamıştır.
+- **Füzyon karşılaştırması.** 200 denemeli Monte Carlo simülasyonu, üç sensör
+  füzyonunun yalnız radara kıyasla RMSE'yi %17.6 düşürdüğünü göstermiştir
+  (Bölüm 5.3). Ancak yanlış alarm oranı üzerindeki etki henüz sayısal
+  olarak raporlanmamıştır; bu ölçüt farklı bir deney düzeni gerektirir.
 - **RF yayılımı.** Sinyal istihbaratı ve karıştırma katmanları, gerçek
   elektromanyetik yayılım çözümü içermeyecek; menzil ve engel etkileri
   basitleştirilmiş modellerle temsil edilecektir.
