@@ -1,3 +1,4 @@
+"""Kurulum betigi."""
 from setuptools import find_packages, setup
 
 package_name = 'taros_c2'
@@ -24,6 +25,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'c2_bridge = taros_c2.c2_bridge_node:main',
         ],
     },
 )

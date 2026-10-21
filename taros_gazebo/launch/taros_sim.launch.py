@@ -144,6 +144,46 @@ def generate_launch_description():
         emulate_tty=True,
     )
 
+    terrain_analyzer = Node(
+        package='taros_terrain',
+        executable='terrain_analyzer',
+        name='terrain_analyzer',
+        output='screen',
+        emulate_tty=True,
+    )
+
+    navigation = Node(
+        package='taros_navigation',
+        executable='navigation',
+        name='navigation',
+        output='screen',
+        emulate_tty=True,
+    )
+
+    iads_coordinator = Node(
+        package='taros_iads',
+        executable='iads_coordinator',
+        name='iads_coordinator',
+        output='screen',
+        emulate_tty=True,
+    )
+
+    aar_recorder = Node(
+        package='taros_aar',
+        executable='aar_recorder',
+        name='aar_recorder',
+        output='screen',
+        emulate_tty=True,
+    )
+
+    c2_bridge = Node(
+        package='taros_c2',
+        executable='c2_bridge',
+        name='c2_bridge',
+        output='screen',
+        emulate_tty=True,
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument(
             'scenario', default_value='single_recon',
@@ -175,4 +215,9 @@ def generate_launch_description():
         classifier,
         rf_scanner,
         effector,
+        terrain_analyzer,
+        navigation,
+        iads_coordinator,
+        aar_recorder,
+        c2_bridge,
     ])

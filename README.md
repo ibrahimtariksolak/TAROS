@@ -66,14 +66,14 @@ Algılama            Füzyon              Karar               Müdahale
 | `taros_tracker` | EKF füzyonu, çoklu hedef takibi | Uygulandı |
 | `taros_classifier` | Sınıflandırma, yörünge kestirimi, niyet analizi | Uygulandı |
 | `taros_effector` | Elektronik harp ve kinetik önleme efektörleri | Uygulandı |
-| `taros_navigation` | Kara aracı özerk intikali, mevzi seçimi | Planlandı |
-| `taros_iads` | Çoklu birlik eşgüdümü, kapsama eniyilemesi | Planlandı |
+| `taros_navigation` | Kara aracı özerk intikali, mevzi seçimi | Uygulandı |
+| `taros_iads` | Çoklu birlik eşgüdümü, kapsama eniyilemesi | Uygulandı |
 | `taros_sigint` | RF sinyal analizi, operatör konumlandırma | Uygulandı |
-| `taros_terrain` | Arazi analizi, radar görüş hattı, kör bölgeler | Planlandı |
+| `taros_terrain` | Arazi analizi, radar görüş hattı, kör bölgeler | Uygulandı |
 | `taros_environment` | Hava koşulları, sensör başarım düşümü | Uygulandı |
-| `taros_aar` | Kayıt, yeniden oynatma, başarım ölçütleri | Planlandı |
-| `taros_c2` | Komuta kontrol arayüzü köprüsü | Planlandı |
-| `taros_bringup` | Sistem genelinde başlatma yapılandırması | Planlandı |
+| `taros_aar` | Kayıt, yeniden oynatma, başarım ölçütleri | Uygulandı |
+| `taros_c2` | Komuta kontrol arayüzü köprüsü | Uygulandı |
+| `taros_bringup` | Sistem genelinde başlatma yapılandırması | Uygulandı |
 
 ---
 
@@ -209,7 +209,37 @@ ataması yapılır.
 onaylı (*confirmed*) duruma geçer. Eşleşme kesildiğinde izleme (*coasting*)
 dönemine girer; zaman aşımında silinir.
 
-### 4.7 Hedef yaşam döngüsü
+### 4.7 Arazi analizi ve görüş hattı
+
+Arazi analiz katmanı, yükseklik ızgarası üzerinde radar–hedef görüş hattı
+(LOS) değerlendirmesi yapar. Bresenham benzeri örnekleme ile gözlemci–hedef
+doğrusu boyunca ara noktalar hesaplanır; herhangi bir noktada arazi
+yüksekliği, doğru üzerindeki irtifayı aşarsa görüş hattı engellenmiş
+sayılır. Viewshed analizi, radarın etrafında 360 derece tarama yaparak kör
+açıları raporlar.
+
+### 4.8 UGV intikali ve yol planlama
+
+Kara aracı navigasyonu, 2B ızgara üzerinde A* yol planlama algoritması ile
+engelden kaçınan rota üretir. Basit kinematik model (maksimum hız, dönüş
+hızı) ile simüle edilir. Waypoint toleransı parametrelendirilebilir.
+
+### 4.9 Silah-hedef ataması (WTA)
+
+Entegre hava savunma sistemi (IADS) koordinatörü, açgözlü optimizasyon ile
+silah-hedef ataması yapar. Her savunma birligi (DefenseUnit) konum, menzil
+ve munisynon durumuna sahiptir. Basari olasılığı mesafe ile azalan bir
+model izler. Birlik yükü (load penalty) ile tek bir birime aşırı yüklenme
+engellenir.
+
+### 4.10 Muharebe sonrası analiz
+
+AAR kayıt modülü, tüm ana konuları (iz, angajman, hava durumu) zamandamgalı
+JSON Lines biçiminde kaydeder. Metrik hesaplama modülü dört temel ölçüt
+sunar: angajman başarı oranı, ortalama tespit gecikmesi, iz konum doğruluğu
+ve sensörden atışa geçen süre.
+
+### 4.11 Hedef yaşam döngüsü
 
 Bir hedef, simülatör model listesinde en az bir kez doğrulanmadan imha
 denetimine girmez. İlk tasarımda model listesi güncellemesi hedef üretiminin
@@ -254,7 +284,13 @@ bağımsız hız kestirimi yapılmış ve bildirilen hızla karşılaştırılm�
 | Tehdit skoru: yakın vs uzak | Yakın hedef yüksek skor alır |
 | Tehdit seviyeleri | GREEN/YELLOW/ORANGE/RED sınırları doğrulandı |
 | En yakın yaklaşma | Analitik çözüm; karşıdan gelen hedefte ~0 m |
-| Birim ve biçim testleri | 178 test; hata ve başarısızlık yok |
+| WTA: yakın birlik tercih edilir | Hedefe en yakın birlik atanır |
+| WTA: menzil dışı atanmaz | Menzil dışı hedef atama listesinde yer almaz |
+| LOS: düz arazide açık | Engelsiz görüş hattı doğrulandı |
+| LOS: tepe engeli | Araya giren tepe görüş hattını keser |
+| A*: engelden kaçınma | Engelli haritada alternatif rota bulunur |
+| AAR: başarı oranı metrikleri | Karışık sonuçlarda doğru oran hesaplanır |
+| Birim ve biçim testleri | 227 test; hata ve başarısızlık yok |
 
 ### 5.3 Girdi doğrulama
 
@@ -311,10 +347,11 @@ colcon test --packages-select taros_gazebo
 | 3 | Efektör modelleri, hedef-silah ataması, kara aracı intikali, arazi analizi |
 | 4 | Çoklu birlik eşgüdümü, komuta kontrol arayüzü, muharebe sonrası analiz |
 
-Birinci ve ikinci aşamalar büyük ölçüde tamamlanmıştır: hedef üretimi,
-sensör modelleri, EKF füzyon/takip katmanı, sınıflandırma ve tehdit
-değerlendirmesi. Sırada sinyal istihbaratı, efektör modelleri ve hedef-silah
-ataması bulunmaktadır.
+Birinci, ikinci, üçüncü ve dördüncü aşamalar büyük ölçüde tamamlanmıştır:
+hedef üretimi, sensör modelleri, EKF füzyon/takip katmanı, sınıflandırma,
+tehdit değerlendirmesi, sinyal istihbaratı, efektörler, arazi analizi,
+UGV navigasyonu, IADS koordinasyonu, AAR ve komuta kontrol köprüsü.
+Sırada sistem genelinde başlatma yapılandırması (bringup) bulunmaktadır.
 
 ---
 

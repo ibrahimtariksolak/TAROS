@@ -1,3 +1,4 @@
+"""Kurulum betigi."""
 from setuptools import find_packages, setup
 
 package_name = 'taros_iads'
@@ -15,7 +16,7 @@ setup(
     zip_safe=True,
     maintainer='Tarik Solak',
     maintainer_email='ibrahimtariksolak@users.noreply.github.com',
-    description='TAROS coklu savunma birligi koordinasyonu ve kapsama optimizasyonu',
+    description='TAROS coklu savunma birligi koordinasyonu',
     license='MIT',
     extras_require={
         'test': [
@@ -24,6 +25,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'iads_coordinator = taros_iads.iads_coordinator_node:main',
         ],
     },
 )

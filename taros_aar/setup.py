@@ -1,3 +1,4 @@
+"""Kurulum betigi."""
 from setuptools import find_packages, setup
 
 package_name = 'taros_aar'
@@ -24,6 +25,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'aar_recorder = taros_aar.aar_recorder_node:main',
         ],
     },
 )

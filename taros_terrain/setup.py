@@ -1,3 +1,4 @@
+"""Kurulum betigi."""
 from setuptools import find_packages, setup
 
 package_name = 'taros_terrain'
@@ -15,7 +16,7 @@ setup(
     zip_safe=True,
     maintainer='Tarik Solak',
     maintainer_email='ibrahimtariksolak@users.noreply.github.com',
-    description='TAROS arazi analizi, radar gorus hatti ve kor alan haritalama',
+    description='TAROS arazi analizi ve radar gorus hatti',
     license='MIT',
     extras_require={
         'test': [
@@ -24,6 +25,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'terrain_analyzer = taros_terrain.terrain_analyzer_node:main',
         ],
     },
 )

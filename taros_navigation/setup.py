@@ -1,3 +1,4 @@
+"""Kurulum betigi."""
 from setuptools import find_packages, setup
 
 package_name = 'taros_navigation'
@@ -24,6 +25,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'navigation = taros_navigation.navigation_node:main',
         ],
     },
 )
